@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Muestreo GeoPDF</title>
+<meta name="theme-color" content="#2b2118">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Muestreo">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="vendor/leaflet.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<!-- Pantalla: lista de mapas -->
+<section id="home" class="screen">
+  <header class="home-head">
+    <div class="brand">
+      <img src="icons/icon-192.png" alt="" width="40" height="40">
+      <div>
+        <h1>Muestreo</h1>
+        <p class="sub">Muestras de suelo georreferenciadas sobre tus GeoPDF</p>
+      </div>
+    </div>
+  </header>
+  <main class="home-body">
+    <label class="btn primary big" for="pdfInput">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      Abrir GeoPDF
+    </label>
+    <input id="pdfInput" type="file" accept="application/pdf,.pdf" hidden>
+    <p class="hint">Elegí el PDF exportado desde QGIS (Archivos, Drive, WhatsApp…). Queda guardado en el teléfono y funciona sin señal.</p>
+    <div id="loading" class="loading" hidden><span class="spinner"></span><span id="loadingText">Leyendo mapa…</span></div>
+    <h2 class="label">Mis lotes</h2>
+    <ul id="mapList" class="map-list"></ul>
+    <p id="emptyMaps" class="empty">Todavía no cargaste ningún mapa.</p>
+  </main>
+  <footer class="home-foot">v<span id="ver"></span> · Los datos quedan solo en este teléfono. Exportá seguido.</footer>
+</section>
+
+<!-- Pantalla: mapa -->
+<section id="mapScreen" class="screen" hidden>
+  <div id="map"></div>
+
+  <header class="topbar">
+    <button id="backBtn" class="icon-btn" aria-label="Volver a mis lotes">
+      <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <div class="topbar-title">
+      <strong id="mapName">Lote</strong>
+      <span id="progress">0 de 0 puntos</span>
+    </div>
+    <span id="gpsChip" class="chip wait">GPS…</span>
+  </header>
+
+  <div class="fabs">
+    <button id="compassBtn" class="fab" aria-label="Brújula">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 6l3 7h-6z" class="fill"/></svg>
+    </button>
+    <button id="layersBtn" class="fab" aria-label="Mostrar u ocultar ambientes">
+      <svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>
+    </button>
+    <button id="locateBtn" class="fab" aria-label="Centrar en mi posición">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+    </button>
+  </div>
+
+  <div class="dock">
+    <div id="nav" class="nav" hidden>
+      <div class="nav-arrow"><svg id="navArrow" viewBox="0 0 24 24"><path d="M12 3l6 16-6-4-6 4z" class="fill"/></svg></div>
+      <div class="nav-text">
+        <strong id="navTitle">Punto 7</strong>
+        <span id="navDist">—</span>
+      </div>
+      <button id="navClose" class="icon-btn small" aria-label="Dejar de navegar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div id="here" class="here">Ambiente acá: <b id="hereZone">—</b></div>
+    <div class="dock-row">
+      <button id="listBtn" class="btn ghost">Muestras <span id="count" class="badge">0</span></button>
+      <button id="sampleBtn" class="btn primary grow">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v14"/><path d="M8 12l4 4 4-4"/><path d="M5 21h14"/></svg>
+        Registrar muestra
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- Hoja: registrar muestra -->
+<div id="sheetBackdrop" class="backdrop" hidden></div>
+
+<form id="sampleSheet" class="sheet" hidden autocomplete="off">
+  <div class="sheet-grip"></div>
+  <h2>Nueva muestra</h2>
+  <div class="coords" id="formCoords">—</div>
+  <div class="row2">
+    <label class="field">
+      <span>Prefijo</span>
+      <input id="fPrefix" type="text" placeholder="COGNO-" autocapitalize="characters">
+    </label>
+    <label class="field">
+      <span>Punto</span>
+      <input id="fPoint" type="text" inputmode="numeric" required>
+    </label>
+  </div>
+  <div class="field">
+    <span>Ambiente</span>
+    <div id="fZones" class="chips"></div>
+  </div>
+  <div class="field">
+    <span>Profundidad (cm) · podés marcar varias</span>
+    <div id="fDepths" class="chips"></div>
+  </div>
+  <label class="field">
+    <span>Observaciones</span>
+    <textarea id="fObs" rows="2" placeholder="Tosca a 30 cm, bajo encharcable…"></textarea>
+  </label>
+  <p id="formWarn" class="warn" hidden></p>
+  <div class="dock-row">
+    <button type="button" id="cancelSample" class="btn ghost">Cancelar</button>
+    <button type="submit" class="btn primary grow">Guardar</button>
+  </div>
+</form>
+
+<!-- Hoja: lista de muestras -->
+<div id="listSheet" class="sheet tall" hidden>
+  <div class="sheet-grip"></div>
+  <div class="sheet-head">
+    <h2>Muestras del lote</h2>
+    <button id="closeList" class="icon-btn small" aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="export">
+    <button class="btn" data-export="csv">CSV</button>
+    <button class="btn" data-export="kml">KML</button>
+    <button class="btn" data-export="geojson">GeoJSON</button>
+  </div>
+  <ul id="sampleList" class="sample-list"></ul>
+  <p id="emptySamples" class="empty">Todavía no registraste muestras en este lote.</p>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="vendor/pdf.min.js"></script>
+<script src="vendor/pdf-lib.min.js"></script>
+<script src="vendor/leaflet.js"></script>
+<script src="geo.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
