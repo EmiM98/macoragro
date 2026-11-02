@@ -1,7 +1,7 @@
 /* Muestreo GeoPDF — app de campo para muestras de suelo georreferenciadas */
 (function () {
   'use strict';
-  const APP_VERSION = '1.0.0';
+  const APP_VERSION = '1.0.1';
   const DEPTHS = ['0-20', '20-40', '40-60', '0-60'];
   const ZONE_ORDER = ['MAP', 'AP', 'MP', 'PP', 'BP', 'MBP'];
   const NEAR_M = 25;
@@ -486,7 +486,7 @@ ${list.map(s => `<Placemark><name>${x(s.code)} ${x(s.depth)}</name><styleUrl>#m<
 
   // ---------------- Arranque ----------------
   renderHome();
-  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  if ('serviceWorker' in navigator && window.isSecureContext) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
   window.__app = { importPdf, openMap, get cur() { return cur; }, onFix, get samples() { return samples; } };

@@ -1,4 +1,4 @@
-const CACHE = 'muestreo-v1.0.0';
+const CACHE = 'muestreo-v1.0.1';
 const FILES = ['./', 'index.html', 'app.css', 'app.js', 'geo.js', 'manifest.webmanifest',
   'vendor/leaflet.css', 'vendor/leaflet.js', 'vendor/pdf.min.js', 'vendor/pdf.worker.min.js', 'vendor/pdf-lib.min.js',
   'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png'];
